@@ -21,6 +21,7 @@ Mutators take a reference to a list as first arg.
 */
 
 #include "word_count.h"
+#include <string.h>
 
 /* Basic utilities */
 
@@ -33,10 +34,9 @@ char *new_string(char *str) {
 }
 
 int init_words(WordCount **wclist) {
-  /* Initialize word count.
-     Returns 0 if no errors are encountered
-     in the body of this function; 1 otherwise.
-  */
+  if (wclist == NULL) {
+    return 1;  // Error: invalid input
+  }
   *wclist = NULL;
   return 0;
 }
@@ -47,21 +47,64 @@ ssize_t len_words(WordCount *wchead) {
      this function.
   */
     size_t len = 0;
+    WordCount *p = wchead;
+
+    while (p != NULL) {
+      len++;
+      p = p -> next;
+    }
+
     return len;
 }
 
 WordCount *find_word(WordCount *wchead, char *word) {
-  /* Return count for word, if it exists */
-  WordCount *wc = NULL;
-  return wc;
+  if (wchead == NULL || word == NULL) {
+    return NULL;
+  }
+  WordCount *p = wchead;
+  while (p != NULL) {
+    if (p->word != NULL && strcmp(p->word, word) == 0) {
+      return p;
+    }
+    p = p->next;
+  }
+  return NULL;
 }
 
 int add_word(WordCount **wclist, char *word) {
-  /* If word is present in word_counts list, increment the count.
-     Otherwise insert with count 1.
-     Returns 0 if no errors are encountered in the body of this function; 1 otherwise.
-  */
- return 0;
+    if (strlen(word) < 2) {
+      return 0;
+    }
+
+    if (wclist == NULL || word == NULL) {
+        return 1;  // Error: invalid input
+    }
+
+    WordCount *wc = find_word(*wclist, word);
+    if (wc != NULL) {
+        wc->count++;
+        return 0;
+    }
+
+    // Word not found, create a new WordCount node
+    WordCount *new_wc = malloc(sizeof(WordCount));
+    if (new_wc == NULL) {
+        return 1;  // Memory allocation failed
+    }
+
+    new_wc->word = strdup(word);  // Duplicate the word to avoid issues with static buffers
+    if (new_wc->word == NULL) {
+        free(new_wc);
+        return 1;  // Memory allocation failed
+    }
+
+    new_wc->count = 1;
+
+    // Insert the new node at the beginning of the list
+    new_wc->next = *wclist;
+    *wclist = new_wc;
+
+    return 0;
 }
 
 void fprint_words(WordCount *wchead, FILE *ofile) {
